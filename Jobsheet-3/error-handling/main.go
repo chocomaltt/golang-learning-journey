@@ -16,16 +16,18 @@ func findUser(id int) error {
 
 type ValidationError struct {
 	Field string
-	Msg string
+	Msg   string
 }
 
 func (e *ValidationError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Field, e.Msg)
 }
 
-func ageValidation (age int) error {
+func ageValidation(age int) error {
 	if age < 0 {
 		return &ValidationError{Field: "age", Msg: "Age cannot be negative."}
+	} else if age > 150 {
+		return &ValidationError{Field: "age", Msg: "Age cannot be over 150 (It's not possible, is it?)."} //Challenge No.3
 	}
 	return nil
 }
@@ -36,7 +38,14 @@ func main() {
 	}
 
 	var ve *ValidationError
+	fmt.Println("\nValidating Age: -5")
 	if err := ageValidation(-5); errors.As(err, &ve) {
 		fmt.Println("Field error: ", ve.Field)
+	}
+
+	// Challenge No.3
+	fmt.Println("\nValidating Age: 151")
+	if err := ageValidation(151); errors.As(err, &ve) {
+		fmt.Printf("Field error: %s\nMessage: %s", ve.Field, ve.Msg)
 	}
 }

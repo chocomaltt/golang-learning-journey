@@ -22,6 +22,17 @@ func Sum[T Number](xs []T) T {
 	return total
 }
 
+// Challenge No.2
+func Filter[T any](in []T, pred func(T) bool) []T {
+	filtered := make([]T, 0, len(in))
+	for _,x := range in {
+		if pred(x) {
+			filtered = append(filtered,x)
+		}
+	}
+	return filtered
+}
+
 func main() {
 	number := []int{1,2,3}
 	power := Change(number, func(n int) int { return n*n })
@@ -32,4 +43,16 @@ func main() {
 	fmt.Println("Length each word: ", length)
 
 	fmt.Println("Total: ", Sum(number))
+
+	// Challenge No.2
+	evens := Filter(number, func(n int) bool { return n%2==0})
+ 
+	fmt.Printf("Even number: ")
+	for _,n := range evens {
+		if n == number[len(number)-1]{
+			fmt.Printf("%d", n)
+		} else {
+			fmt.Printf("%d, ",n)
+		}
+	}
 }
