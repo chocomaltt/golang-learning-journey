@@ -2,10 +2,75 @@ package main
 
 import (
 	"net/http"
-
+	"sync"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+
+/* Task */
+type Product struct {
+	ID string `json:"id"`
+	Name string `json:"name" binding:"required,min=2"`
+	Stock *int16 `json:"stock" binding:"required,gte=0"`
+}
+
+type ProductStore struct {
+	mu sync.RWMutex
+	products map[string]Product
+} 
+
+func NewProductStore() *ProductStore{
+	return &ProductStore{
+		products: make(map[string]Product),
+	}
+}
+
+func (s *ProductStore) addProduct(c *gin.Context) {
+	var req Product
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	id := uuid.New()
+	req.ID = id.String()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.products[req.ID] = req
+
+	c.JSON(http.StatusCreated, req)
+}
+
+func (s *ProductStore) getProduct(c *gin.Context) {
+	id := c.Param("id")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	product, exists := s.products[id]
+
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": id, "data": product})
+}
+
+func (s *ProductStore) deleteProduct(c *gin.Context) {
+	id := c.Param("id")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _,exists := s.products[id]; !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		return
+	}
+
+	delete(s.products, id)
+	c.JSON(http.StatusNoContent, gin.H{})
+}
+/* End Task */
 
 type CreateUserReq struct {
 	Name string `json:"name" binding:"required,min=2"`
